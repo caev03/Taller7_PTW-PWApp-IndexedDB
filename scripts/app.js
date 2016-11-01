@@ -18,6 +18,7 @@ var url = "http://" + document.location.host + document.location.pathname;
 
   var hayIndexedDB = false;
   var db;
+  var objectStore;
 
   if(!window.indexedDB){
     window.alert("Your browser doesn't support a stable database.")
@@ -31,14 +32,16 @@ var url = "http://" + document.location.host + document.location.pathname;
       hayIndexedDB = true;
       db = event.target.result;
       console.log("Welcome to IndexedDB.")
+      objectStore = db.createObjectStore("FlightDB",{keyPath: "flightid"});
+
+      objectStore.createIndex("endTime", "endTime", { unique: false });
+      objectStore.createIndex("estado", "estado", { unique: false });
+      objectStore.createIndex("ciudad", "ciudad", { unique: false });
     }
     request.onupgradeneeded = function(event) {
       db = event.target.result;
-
-      var objectStore = db.createObjectStore("FlightDB",{keyPath: "flightid"});
-      objectStore.createIndex("startTime", "startTime", { unique: false });
-      objectStore.createIndex("estado", "estado", { unique: false });
-      objectStore.createIndex("ciudad", "ciudad", { unique: false });
+      console.log("asdasdasd");
+      
     }
   }
   
@@ -148,19 +151,23 @@ var url = "http://" + document.location.host + document.location.pathname;
     card.querySelector('.table-striped .table .tbody').textContent="";
 
     var txt = "";
-
-    console.log(db);
-    if(db!=null){
-      var customerObjectStore = db.transaction("FlightDB", "readwrite").objectStore("FlightDB");
-    }
-    for(var i = 0; i < flights.length; i++){
-      console.log(flights[i]);
-      var actualFlight = flights[i];
-      actualFlight.ciudad = data.label;
-      console.log(actualFlight.ciudad);
-      if(db != null){
-        customerObjectStore.add(actualFlightt);
+    if(objectStore != null){
+      console.log("asdasdasd");
+      objectStore.transaction.oncomplete = function(event) {
+    // Store values in the newly created objectStore.
+      if(db!=null){
+        var customerObjectStore = db.transaction("FlightDB", "readwrite").objectStore("FlightDB");
       }
+      for (var i in flights) {
+        var aaa = flights[i];
+        aaa.ciudad = data.label;
+        customerObjectStore.add(aaa);
+      }
+    };
+    }
+    
+    for(var i = 0; i < flights.length; i++){
+      var actualFlight = flights[i];
       var id = actualFlight.flightid;
       var horario = new Date(actualFlight.endTime);
       var horarioString = horario.getDate() + "/" + (horario.getMonth()+1) + "/" + horario.getFullYear();
